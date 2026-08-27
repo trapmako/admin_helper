@@ -42,7 +42,7 @@ local pinfo_dialog_id = 7777
 local at_dialog_id = 7778
 
 local CHAT_COLOR = 0x88AA62
-local CHECK_COLOR = 0xFF8C00
+local CHECK_COLOR = 0xE3B776
 
 local adminSession = false
 local checkEnabled = false

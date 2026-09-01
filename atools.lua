@@ -1466,7 +1466,7 @@ function cmd_at()
 
         at_dialog_id,
 
-        '{E37676}Admin Helper by еклипс {FFFFFF}|| {5C5C5C}Version 1.0.2',
+        '{E37676}Admin Helper by еклипс {FFFFFF}|| {5C5C5C}Version 1.0.4',
 
 
         '{DBC99C}In-game systems:\n' ..

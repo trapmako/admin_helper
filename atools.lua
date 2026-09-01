@@ -40,6 +40,7 @@ local spectatePlayerId = -1
 
 local pinfo_dialog_id = 7777
 local at_dialog_id = 7778
+local prolet_dialog_id = 7779
 
 local CHAT_COLOR = 0x88AA62
 local CHECK_COLOR = 0xE3B776
@@ -49,6 +50,7 @@ local checkEnabled = false
 local whEnabled = false
 local tracersEnabled = false
 local reDetectEnabled = false
+local admMsgEnabled = false
 
 
 -- =========================================================
@@ -661,11 +663,7 @@ end
 
 function sampev.onServerMessage(color, text)
 
-    local cleanText =
-        text:gsub(
-            '{%x%x%x%x%x%x}',
-            ''
-        )
+    local cleanText = text:gsub('{%x+}', '')
 
 
     -- =====================================================
@@ -724,7 +722,6 @@ function sampev.onServerMessage(color, text)
     ) then
 
         adminSession = true
-
         saveAdminSession(true)
 
         return
@@ -743,17 +740,14 @@ function sampev.onServerMessage(color, text)
     ) then
 
         adminSession = false
-
         saveAdminSession(false)
-
 
         -- ¬˚ÍÎ˛˜‡ÂÏ WH
         whEnabled = false
         saveWhState(false)
 
         -- ¬˚ÍÎ˛˜‡ÂÏ Ú‡ÒÂ˚
-        tracersEnabled = false 
-
+        tracersEnabled = false
         tracerBullets = {}
 
         reDetectEnabled = false
@@ -762,7 +756,6 @@ function sampev.onServerMessage(color, text)
 
         reAimData = {}
         reShootState = {}
-
 
         pinfo_id = -1
 
@@ -776,6 +769,15 @@ function sampev.onServerMessage(color, text)
     -- =====================================================
 
     if not adminSession then
+        return
+    end
+
+
+    -- =====================================================
+    -- ¿ƒÃ»Õ-”¬≈ƒŒÃÀ≈Õ»ﬂ
+    -- =====================================================
+
+    if not admMsgEnabled then
         return
     end
 
@@ -1467,13 +1469,13 @@ function cmd_at()
         '{E37676}Admin Helper by ÂÍÎËÔÒ {FFFFFF}|| {5C5C5C}Version 1.0.2',
 
 
-        '{DBC99C}Checks:\n' ..
+        '{DBC99C}In-game systems:\n' ..
         '{B4D1C3}/checkon                      Enable display checks in chat\n' ..
         '{B4D1C3}/checkoff                      Disable display checks in chat\n' ..
-        '\n' ..
-        '{DBC99C}Player info:\n' ..
         '{B4D1C3}/pinfo [id]                      Displays a dialog with the player\'s general statistics\n' ..
         '{B4D1C3}/proverka [id]               Auto-call for cheat check\n' ..
+        '{B4D1C3}/adm.msg                      Enable/Disable admin gametexts\n' ..
+        '{B4D1C3}/prolet                           Displays a dialog with gang list\n' ..
         '\n' ..
         '{DBC99C}Visual:\n' ..
         '{B4D1C3}/whadmin                       Enable / disable admin WallHack\n' ..
@@ -1488,6 +1490,201 @@ function cmd_at()
 
 end
 
+-- =========================================================
+-- /PROLET
+-- =========================================================
+
+function cmd_prolet()
+
+    if not adminSession then
+        return
+    end
+
+
+    local myId =
+        select(
+            2,
+            sampGetPlayerIdByCharHandle(
+                PLAYER_PED
+            )
+        )
+
+
+    if not myId then
+
+        sampAddChatMessage(
+            '-> ÕÂ Û‰‡ÎÓÒ¸ ÔÓÎÛ˜ËÚ¸ ‚‡¯ Player ID',
+            CHAT_COLOR
+        )
+
+        return
+
+    end
+
+
+    sampShowDialog(
+
+        prolet_dialog_id,
+
+        'Gang List',
+
+        '{44A65A}Grove\n' ..
+        '{A1187E}Ballas\n' ..
+        '\n' ..
+        '{FFFFFF}¬˚ÈÚË Ò ‡‰ÏËÌÍË',
+
+        'Ok',
+        'Cancel',
+        2
+
+    )
+
+
+    lua_thread.create(function()
+
+        local result
+        local button
+        local listitem
+        local input
+
+
+        repeat
+
+            wait(0)
+
+            result,
+            button,
+            listitem,
+            input =
+                sampHasDialogRespond(
+                    prolet_dialog_id
+                )
+
+        until result
+
+
+        -- Cancel
+        if button == 0 then
+            return
+        end
+
+
+        -- Grove
+        if listitem == 0 then
+
+            local groveSkins = {
+                105,
+                106,
+                107,
+                297
+            }
+
+            local randomSkin =
+                groveSkins[
+                    math.random(
+                        #groveSkins
+                    )
+                ]
+
+
+            sampSendChat(
+                '/setgang ' ..
+                myId ..
+                ' grove 1'
+            )
+
+            wait(1000)
+
+            sampSendChat(
+                '/ss ' ..
+                randomSkin
+            )
+
+            return
+
+        end
+
+
+        -- Ballas
+        if listitem == 1 then
+
+            local ballasSkins = {
+                102,
+                103,
+                104
+            }
+
+            local randomSkin =
+                ballasSkins[
+                    math.random(
+                        #ballasSkins
+                    )
+                ]
+
+
+            sampSendChat(
+                '/setgang ' ..
+                myId ..
+                ' ballas 1'
+            )
+
+            wait(1000)
+
+            sampSendChat(
+                '/ss ' ..
+                randomSkin
+            )
+
+            return
+
+        end
+
+
+        -- ¬˚ÈÚË Ò ‡‰ÏËÌÍË
+        if listitem == 2 then
+
+            sampSendChat(
+                '/alogout'
+            )
+
+            return
+
+        end
+
+    end)
+
+end
+
+-- =========================================================
+-- /adm.msg
+-- =========================================================
+
+function cmd_admmsg()
+
+    if not adminSession then
+        return
+    end
+
+    admMsgEnabled =
+        not admMsgEnabled
+
+    if admMsgEnabled then
+
+        sampAddChatMessage(
+            'admin messages -> true',
+            -1
+        )
+
+    else
+
+        sampAddChatMessage(
+            'admin messages -> false',
+            -1
+        )
+
+    end
+
+end
 
 -- =========================================================
 -- /whadmin
@@ -2589,6 +2786,7 @@ local function isDuplicateTracer(data)
     return result
 
 end
+
 
 -- =========================================================
 -- Õ¿—“–Œ… » “–¿—≈–Œ¬
@@ -3941,7 +4139,7 @@ function main()
         wait(100)
     end
 
-
+    
     -- =====================================================
     -- «¿√–”« ¿
     -- =====================================================
@@ -4000,6 +4198,16 @@ function main()
     sampRegisterChatCommand(
         'tracers',
         cmd_tracers
+    )
+
+    sampRegisterChatCommand(
+        'adm.msg',
+        cmd_admmsg
+    )
+
+    sampRegisterChatCommand(
+        'prolet',
+        cmd_prolet
     )
 
 
